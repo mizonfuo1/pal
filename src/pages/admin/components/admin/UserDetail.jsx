@@ -2,19 +2,80 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ArrowLeft, Mail, Phone, MapPin, Calendar, DollarSign, CreditCard, Activity } from "lucide-react"
+import { ArrowLeft, Mail, Phone, MapPin, Calendar, DollarSign, CreditCard, Activity, Globe } from "lucide-react"
 import api from "../../../../utils/api"
+
+const CURRENCIES = [
+  { code: "USD", name: "US Dollar", symbol: "$" },
+  { code: "EUR", name: "Euro", symbol: "€" },
+  { code: "GBP", name: "British Pound", symbol: "£" },
+  { code: "CAD", name: "Canadian Dollar", symbol: "CA$" },
+  { code: "AUD", name: "Australian Dollar", symbol: "A$" },
+  { code: "JPY", name: "Japanese Yen", symbol: "¥" },
+  { code: "CHF", name: "Swiss Franc", symbol: "CHF" },
+  { code: "CNY", name: "Chinese Yuan", symbol: "¥" },
+  { code: "INR", name: "Indian Rupee", symbol: "₹" },
+  { code: "BRL", name: "Brazilian Real", symbol: "R$" },
+  { code: "MXN", name: "Mexican Peso", symbol: "MX$" },
+  { code: "SGD", name: "Singapore Dollar", symbol: "S$" },
+  { code: "HKD", name: "Hong Kong Dollar", symbol: "HK$" },
+  { code: "NOK", name: "Norwegian Krone", symbol: "kr" },
+  { code: "SEK", name: "Swedish Krona", symbol: "kr" },
+  { code: "DKK", name: "Danish Krone", symbol: "kr" },
+  { code: "NZD", name: "New Zealand Dollar", symbol: "NZ$" },
+  { code: "ZAR", name: "South African Rand", symbol: "R" },
+  { code: "AED", name: "UAE Dirham", symbol: "د.إ" },
+  { code: "SAR", name: "Saudi Riyal", symbol: "﷼" },
+  { code: "NGN", name: "Nigerian Naira", symbol: "₦" },
+  { code: "GHS", name: "Ghanaian Cedi", symbol: "₵" },
+  { code: "KES", name: "Kenyan Shilling", symbol: "KSh" },
+  { code: "EGP", name: "Egyptian Pound", symbol: "E£" },
+  { code: "PKR", name: "Pakistani Rupee", symbol: "₨" },
+  { code: "BDT", name: "Bangladeshi Taka", symbol: "৳" },
+  { code: "PHP", name: "Philippine Peso", symbol: "₱" },
+  { code: "IDR", name: "Indonesian Rupiah", symbol: "Rp" },
+  { code: "MYR", name: "Malaysian Ringgit", symbol: "RM" },
+  { code: "THB", name: "Thai Baht", symbol: "฿" },
+  { code: "VND", name: "Vietnamese Dong", symbol: "₫" },
+  { code: "KRW", name: "South Korean Won", symbol: "₩" },
+  { code: "TRY", name: "Turkish Lira", symbol: "₺" },
+  { code: "RUB", name: "Russian Ruble", symbol: "₽" },
+  { code: "PLN", name: "Polish Zloty", symbol: "zł" },
+  { code: "CZK", name: "Czech Koruna", symbol: "Kč" },
+  { code: "HUF", name: "Hungarian Forint", symbol: "Ft" },
+  { code: "RON", name: "Romanian Leu", symbol: "lei" },
+  { code: "ILS", name: "Israeli New Shekel", symbol: "₪" },
+  { code: "CLP", name: "Chilean Peso", symbol: "CLP$" },
+  { code: "COP", name: "Colombian Peso", symbol: "COL$" },
+  { code: "PEN", name: "Peruvian Sol", symbol: "S/." },
+  { code: "ARS", name: "Argentine Peso", symbol: "ARS$" },
+]
 
 export default function UserDetail({ user, onBack }) {
   const [userDetails, setUserDetails] = useState(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState("overview")
+  const [showCurrencyModal, setShowCurrencyModal] = useState(false)
 
   useEffect(() => {
     if (user) {
       fetchUserDetails()
     }
   }, [user])
+
+  const handleChangeCurrency = async (currency) => {
+    try {
+      const response = await api.post(`/admin/users/${user.id}/currency`, { currency })
+      if (response.data.success) {
+        alert(`Currency changed to ${currency} successfully!`)
+        setShowCurrencyModal(false)
+        fetchUserDetails()
+      }
+    } catch (error) {
+      console.error('Failed to change currency:', error)
+      alert(error.response?.data?.message || 'Failed to change currency')
+    }
+  }
 
   const fetchUserDetails = async () => {
     try {
@@ -104,7 +165,18 @@ export default function UserDetail({ user, onBack }) {
                   <DollarSign size={20} className="text-green-600" />
                   <div className="ml-3">
                     <p className="text-sm font-medium text-gray-600">Balance</p>
-                    <p className="text-lg font-bold text-gray-900">${userData.account_balance}</p>
+                    <p className="text-lg font-bold text-gray-900">
+                      {CURRENCIES.find(c => c.code === (userData.currency || "USD"))?.symbol || "$"}{userData.account_balance}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <div className="flex items-center">
+                  <Globe size={20} className="text-purple-600" />
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-gray-600">Currency</p>
+                    <p className="text-lg font-bold text-gray-900">{userData.currency || "USD"}</p>
                   </div>
                 </div>
               </div>
@@ -200,6 +272,13 @@ export default function UserDetail({ user, onBack }) {
                 <button className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
                   Credit Account
                 </button>
+                <button
+                  onClick={() => setShowCurrencyModal(true)}
+                  className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium flex items-center justify-center"
+                >
+                  <Globe size={14} className="mr-2" />
+                  Change Currency
+                </button>
                 <button className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium">
                   Send Message
                 </button>
@@ -245,6 +324,115 @@ export default function UserDetail({ user, onBack }) {
           </p>
         </div>
       )}
+
+      {showCurrencyModal && (
+        <ChangeCurrencyModal
+          user={userData}
+          onClose={() => setShowCurrencyModal(false)}
+          onChangeCurrency={handleChangeCurrency}
+        />
+      )}
+    </div>
+  )
+}
+
+function ChangeCurrencyModal({ user, onClose, onChangeCurrency }) {
+  const [selectedCurrency, setSelectedCurrency] = useState(user.currency || "USD")
+  const [searchTerm, setSearchTerm] = useState("")
+  const [loading, setLoading] = useState(false)
+
+  const filteredCurrencies = CURRENCIES.filter(c =>
+    c.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    c.name.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!selectedCurrency) return
+    setLoading(true)
+    await onChangeCurrency(selectedCurrency)
+    setLoading(false)
+  }
+
+  const currentCurrency = CURRENCIES.find(c => c.code === (user.currency || "USD"))
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-lg max-w-md w-full p-6 max-h-[90vh] flex flex-col">
+        <h3 className="text-lg font-semibold mb-2">Change User Currency</h3>
+        <div className="mb-4 p-3 bg-purple-50 rounded-lg">
+          <p className="text-sm text-purple-700">
+            Changing currency for: <strong>{user.name}</strong> ({user.email})
+          </p>
+          <p className="text-sm text-purple-700 mt-1">
+            Current Currency: <strong>{currentCurrency ? `${currentCurrency.code} (${currentCurrency.symbol}) – ${currentCurrency.name}` : user.currency || "USD"}</strong>
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+          <div className="mb-3">
+            <input
+              type="text"
+              placeholder="Search currency by code or name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm"
+            />
+          </div>
+
+          <div className="flex-1 overflow-y-auto border border-gray-200 rounded-lg min-h-0" style={{ maxHeight: '300px' }}>
+            {filteredCurrencies.map((currency) => (
+              <label
+                key={currency.code}
+                className={`flex items-center px-4 py-2.5 cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 ${
+                  selectedCurrency === currency.code ? 'bg-purple-50' : ''
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="currency"
+                  value={currency.code}
+                  checked={selectedCurrency === currency.code}
+                  onChange={() => setSelectedCurrency(currency.code)}
+                  className="mr-3 accent-purple-600"
+                />
+                <span className="w-12 text-sm font-semibold text-gray-800">{currency.code}</span>
+                <span className="w-8 text-sm text-gray-500 text-center">{currency.symbol}</span>
+                <span className="text-sm text-gray-600 ml-2">{currency.name}</span>
+              </label>
+            ))}
+            {filteredCurrencies.length === 0 && (
+              <p className="text-center text-gray-500 text-sm py-6">No currencies found</p>
+            )}
+          </div>
+
+          {selectedCurrency && (
+            <div className="mt-3 p-2 bg-gray-50 rounded text-sm text-gray-600 text-center">
+              Selected: <strong>{selectedCurrency}</strong>
+              {CURRENCIES.find(c => c.code === selectedCurrency) && (
+                <> — {CURRENCIES.find(c => c.code === selectedCurrency).name} ({CURRENCIES.find(c => c.code === selectedCurrency).symbol})</>
+              )}
+            </div>
+          )}
+
+          <div className="flex justify-end space-x-3 mt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading || !selectedCurrency || selectedCurrency === (user.currency || "USD")}
+              className="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {loading ? 'Saving...' : 'Change Currency'}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   )
 }
